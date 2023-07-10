@@ -176,7 +176,10 @@ def add_book():
         book = Book(title=title, author=author, publication_date=publication_date, isbn=isbn, availability=availability, count=count)
         db.session.add(book)
         db.session.commit()
-        return "Book added" + title
+        return jsonify( {
+                        "message": "Book added successfully",
+                        "book_id": book.book_id,
+                        })
     else:
         return "User not authorized to add book"
 
@@ -234,7 +237,10 @@ def login():
                         'success code': '200',
                         'user id ': user.user_id,})
     else:
-        return jsonify({'message': 'Wrong credentials'})
+        return jsonify({
+                        "status": "Incorrect username/password provided. Please retry",
+                        "status_code": 401
+                        })
 
 @app.route('/check_auth' , methods=['POST'])
 @jwt_required()
