@@ -24,9 +24,9 @@ def index():
 def rent():
     current_user = get_jwt_identity()
     data = request.get_json()
-    book_id = data['book_id']
+    title = data['title']
     user = User.query.filter_by(username=current_user).first()
-    book = Book.query.filter_by(book_id=book_id).first()
+    book = Book.query.filter_by(title=title).first()
     if user and book:
         if book.availability and book.count > 0:
             rent = Rent(user_id=user.user_id, book_id=book.book_id, rent_date=datetime.datetime.now(), due_date=datetime.datetime.now() - datetime.timedelta(days=7))
@@ -35,7 +35,9 @@ def rent():
                 book.availability = False
             db.session.add(rent)
             db.session.commit()
-            return jsonify({'message': 'Book rented successfully!'})
+            return jsonify({'message': 'Book rented successfully!',
+                            'book_id': book.book_id,
+                            'title': book.title,})
         else:
             earliest_rent = Rent.query.filter_by(book_id=book.book_id).order_by(Rent.due_date.asc()).first()
             if earliest_rent:
@@ -210,9 +212,13 @@ def delete_book():
         book = Book.query.filter_by(book_id=book_id).first()
         db.session.delete(book)
         db.session.commit()
-        return "Book deleted"
+        return jsonify({'message': 'Book deleted successfully!'
+                        ,
+                        'status': 'success',
+                        'success code': '200',
+                        'book id': book.book_id,})
     else:
-        return "User not authorized to delete book"
+        return jsonify({'message': 'User not authorized to delete book!'})
 
 
 @app.route('/login', methods=['POST'])
