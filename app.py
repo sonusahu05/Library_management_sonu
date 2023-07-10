@@ -40,7 +40,7 @@ def rent():
             earliest_rent = Rent.query.filter_by(book_id=book.book_id).order_by(Rent.due_date.asc()).first()
             if earliest_rent:
                 due_date = earliest_rent.due_date
-                return jsonify({'message': 'Book not available!', 'due_date': due_date})
+                return jsonify({'message': 'Book not available!', 'next_availibility': due_date})
             else:
                 return jsonify({'message': 'Book not available!', 'due_date': None})
     else:
