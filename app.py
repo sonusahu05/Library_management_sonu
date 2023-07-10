@@ -72,8 +72,7 @@ def not_returned():
     current_user = get_jwt_identity()
     user = User.query.filter_by(username=current_user).first()
     if user and user.is_admin:
-        current_date = date.today()
-        rents = Rent.query.filter(Rent.due_date < current_date.strftime("%Y-%m-%d")).all()
+        rents = Rent.query.filter(Rent.due_date < datetime.datetime.now()).all()
         rent_list = []
         for rent in rents:
             book = Book.query.filter_by(book_id=rent.book_id).first()
@@ -86,17 +85,51 @@ def not_returned():
                 'isbn': book.isbn,
                 'rent_date': str(rent.rent_date),
                 'due_date': str(rent.due_date),
-                'user_id': user.user_id,
-                'username': user.username,
-                'email': user.email,
-                'first_name': user.first_name,
-                'last_name': user.last_name
+                'username': user.username
             }
-            if rent.due_date < datetime.datetime.now():
-                rent_list.append(rent_data)
+            rent_list.append(rent_data)
         return jsonify(rent_list)
     else:
         return jsonify({'message': 'User not found!'})
+
+@app.route('/return', methods=['POST'])
+@jwt_required()
+def return_book():
+    current_user = get_jwt_identity()
+    data = request.get_json()
+    book_id = data['book_id']
+    user = User.query.filter_by(username=current_user).first()
+    book = Book.query.filter_by(book_id=book_id).first()
+    if user and book:
+        rent = Rent.query.filter_by(user_id=user.user_id, book_id=book.book_id).first()
+        if rent:
+            db.session.delete(rent)
+            book.count += 1
+            if book.count > 0:
+                book.availability = True
+            db.session.commit()
+            return jsonify({'message': 'Book returned successfully!'})
+        else:
+            return jsonify({'message': 'Book not rented!'})
+    else:
+        return jsonify({'message': 'Book or user not found!'})
+
+@app.route('/increase_book_count', methods=['PUT'])
+@jwt_required()
+def increase_book_count():
+    current_user = get_jwt_identity()
+    data = request.get_json()
+    book_id = data['book_id']
+    count=data['count']
+    user = User.query.filter_by(username=current_user).first()
+    book = Book.query.filter_by(book_id=book_id).first()
+    if user and user.is_admin and book:
+        book.count += count
+        db.session.commit()
+        return jsonify({'message': 'Book count increased successfully!'})
+    else:
+        return jsonify({'message': 'Book or user not found!'})
+
 
 @app.route('/books', methods=['GET'])
 def books():
