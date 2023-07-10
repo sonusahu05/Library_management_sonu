@@ -91,6 +91,7 @@ def not_returned():
         return jsonify(rent_list)
     else:
         return jsonify({'message': 'User not found!'})
+    
 
 @app.route('/return', methods=['POST'])
 @jwt_required()
@@ -188,6 +189,21 @@ def register():
     db.session.add(user)
     db.session.commit()
     return "User created " + username
+
+@app.route('/delete_book', methods=['DELETE'])
+@jwt_required()
+def delete_book():
+    current_user = get_jwt_identity()
+    data = request.get_json()
+    book_id = data['book_id']
+    user=User.query.filter_by(username=current_user).first()
+    if user and user.is_admin :
+        book = Book.query.filter_by(book_id=book_id).first()
+        db.session.delete(book)
+        db.session.commit()
+        return "Book deleted"
+    else:
+        return "User not authorized to delete book"
 
 
 @app.route('/login', methods=['POST'])

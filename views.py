@@ -17,17 +17,3 @@ def verify_credentials(username, password):
             return False
 
         
-def checks_auth(username, auth_token):
-    url = 'http://localhost:5000/check_auth'
-    headers = {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + auth_token
-    }
-    data = {
-        'username': username
-    }
-    response = requests.post(url, headers=headers, data=json.dumps(data))
-    if response and  response.json()['message'] == 'Authorized':
-        return True
-    else:
-        return False
