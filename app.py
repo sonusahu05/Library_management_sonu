@@ -193,7 +193,11 @@ def register():
     user = User(username=username, password=hashed_password, email=email, first_name=first_name, last_name=last_name, is_admin=is_admin)
     db.session.add(user)
     db.session.commit()
-    return "User created " + username
+    return jsonify({'message': 'New user created!',
+                    'username': user.username,
+                    'status': 'success',
+                    'success code': '200'})
+
 
 @app.route('/delete_book', methods=['DELETE'])
 @jwt_required()
@@ -216,10 +220,13 @@ def login():
     data = request.get_json()
     username = data['username']
     password = data['password']
-    
+    user = User.query.filter_by(username=username).first()
     if verify_credentials(username, password):
         access_token = create_access_token(identity=username)
-        return jsonify({'token': access_token})
+        return jsonify({'token': access_token,
+                        'status': 'success',
+                        'success code': '200',
+                        'user id ': user.user_id,})
     else:
         return jsonify({'message': 'Wrong credentials'})
 
